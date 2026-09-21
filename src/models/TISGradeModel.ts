@@ -22,7 +22,9 @@ export class TISGradeModel {
   /**
    * Factory Method สำหรับแปลง Raw Data จาก API/JSON เข้าสู่ Domain Model
    */
-  static fromApiResponse(rawItem: TISItem | Record<string, any>): TISGradeModel {
+  static fromApiResponse(
+    rawItem: TISItem | Record<string, any>,
+  ): TISGradeModel {
     // Cast เป็น any ชั่วคราวเฉพาะตอนดึง Property เพื่อรองรับความหลากหลายของ Key
     const item = rawItem as any;
 
@@ -30,13 +32,37 @@ export class TISGradeModel {
     const plantVal = item.plant || item.Plant || "";
 
     return new TISGradeModel({
-      id: item.id || item.ID || (gradeVal ? `${gradeVal}-${plantVal}` : undefined),
+      id:
+        item.id ||
+        item.ID ||
+        (gradeVal ? `${gradeVal}-${plantVal}` : undefined),
       grade: gradeVal,
-      gradeType: item.gradeType || item.grade_type || item.Grade_type || item.GradeType || "N/A",
+      gradeType:
+        item.gradeType ||
+        item.grade_type ||
+        item.Grade_type ||
+        item.GradeType ||
+        "N/A",
       plant: plantVal,
       level: item.level || item.Level || "-",
-      tisStatus: item.tisStatus || item.tis_status || item.Tis_status || item.TisStatus || "N/A",
-      activeStatus: item.activeStatus || item.active_status || item.Active_status || item.ActiveStatus || "Active",
+      // ✅ เพิ่มคีย์ "Status Approved TIS" และ "Status_Approved_TIS"
+      tisStatus:
+        item["Status Approved TIS"] ||
+        item.Status_Approved_TIS ||
+        item.tisStatus ||
+        item.tis_status ||
+        item.Tis_status ||
+        item.TisStatus ||
+        "N/A",
+      // ✅ เพิ่มคีย์ "is_active" และ "is_Active" เพื่อดึงสถานะ Active/Inactive จาก Sheet
+      activeStatus:
+        item.activeStatus ||
+        item.is_active ||
+        item.is_Active ||
+        item.active_status ||
+        item.Active_status ||
+        item.ActiveStatus ||
+        "Active",
     });
   }
 

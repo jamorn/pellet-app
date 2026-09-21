@@ -5,6 +5,16 @@ const CACHE_KEY = "tis_grades_data";
 const LAST_UPDATED_KEY = "tis_grades_last_updated";
 
 export class TISApiService {
+  private static instance: TISApiService;
+
+  // เพิ่ม Singleton getInstance()
+  public static getInstance(): TISApiService {
+    if (!TISApiService.instance) {
+      TISApiService.instance = new TISApiService();
+    }
+    return TISApiService.instance;
+  }
+
   /**
    * ดึงข้อมูลที่แคชไว้จาก LocalStorage
    */
@@ -83,5 +93,45 @@ export class TISApiService {
     }
 
     return rawItems.map((item) => TISGradeModel.fromApiResponse(item));
+  }
+
+  /**
+   * สร้าง Grade ใหม่ไปยัง GAS API
+   */
+  async createGrade(payload: any): Promise<boolean> {
+    const apiUrl = process.env.NEXT_PUBLIC_GAS_API_URL;
+    if (!apiUrl) throw new Error("NEXT_PUBLIC_GAS_API_URL is not set");
+
+    try {
+      const res = await fetch(apiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "create", ...payload }),
+      });
+      return res.ok;
+    } catch (error) {
+      console.error("Failed to create grade:", error);
+      return false;
+    }
+  }
+
+  /**
+   * ลบ Grade ใน GAS API
+   */
+  async deleteGrade(gradeKey: string): Promise<boolean> {
+    const apiUrl = process.env.NEXT_PUBLIC_GAS_API_URL;
+    if (!apiUrl) throw new Error("NEXT_PUBLIC_GAS_API_URL is not set");
+
+    try {
+      const res = await fetch(apiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "delete", grade: gradeKey }),
+      });
+      return res.ok;
+    } catch (error) {
+      console.error("Failed to delete grade:", error);
+      return false;
+    }
   }
 }

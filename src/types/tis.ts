@@ -1,3 +1,4 @@
+// src/types/tis.ts
 export interface TISItem {
   Grade: string;
   "Status Approved TIS": string;
