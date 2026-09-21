@@ -21,6 +21,8 @@ import {
 import { TISItem } from "@/types/tis";
 import { TISApiService } from "@/services/TISApiService";
 import { signIn, signOut, useSession } from "next-auth/react";
+import GradeLabelModal from "@/components/GradeLabelModal";
+import { formatPlant } from "@/lib/format";
 
 const STORAGE_KEY = "tis_grades_data";
 const LAST_UPDATED_KEY = "tis_grades_last_updated";
@@ -45,6 +47,8 @@ export default function Home() {
 
   const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
+  // Grade ที่เลือกเพื่อเปิด Modal ฉลาก มอก.
+  const [selectedGrade, setSelectedGrade] = useState<TISItem | null>(null);
   const [formData, setFormData] = useState<TISItem>({
     Grade: "",
     "Status Approved TIS": "N/A",
@@ -503,7 +507,7 @@ export default function Home() {
                   <option value="ALL">เลือก Plant (ทั้งหมด)</option>
                   {uniquePlants.map((plant) => (
                     <option key={plant} value={plant}>
-                      Plant: {plant}
+                      Plant: {formatPlant(plant)}
                     </option>
                   ))}
                 </select>
@@ -570,7 +574,13 @@ export default function Home() {
                           <td
                             className={`p-3 font-bold ${isDark ? "text-slate-100" : "text-slate-900"}`}
                           >
-                            {item.Grade}
+                            <button
+                              onClick={() => setSelectedGrade(item)}
+                              className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline font-bold text-left cursor-pointer"
+                              title={`คลิกเพื่อดูฉลาก มอก. ของ ${item.Grade}`}
+                            >
+                              {item.Grade}
+                            </button>
                           </td>
                           <td
                             className={
@@ -580,8 +590,14 @@ export default function Home() {
                             {item.Grade_type}
                           </td>
                           <td className="p-3">
-                            <span className="px-2.5 py-0.5 rounded-md bg-blue-500/10 border border-blue-500/20 text-blue-500 text-xs font-semibold">
-                              {item.plant}
+                            <span
+                              className={`px-2.5 py-0.5 rounded-md border text-xs font-semibold ${
+                                isDark
+                                  ? "bg-blue-500/10 border-blue-500/20 text-blue-400"
+                                  : "bg-blue-50 border-blue-200 text-blue-700"
+                              }`}
+                            >
+                              {formatPlant(item.plant)}
                             </span>
                           </td>
                           <td
@@ -592,16 +608,26 @@ export default function Home() {
                             {item.level}
                           </td>
                           <td className="p-3">
-                            <span className="px-2.5 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-semibold">
+                            <span
+                              className={`px-2.5 py-0.5 rounded-md border text-xs font-semibold ${
+                                isDark
+                                  ? "bg-amber-500/10 border-amber-500/20 text-amber-400"
+                                  : "bg-amber-50 border-amber-200 text-amber-700"
+                              }`}
+                            >
                               {item["Status Approved TIS"]}
                             </span>
                           </td>
                           <td className="p-3">
                             <span
-                              className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                              className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
                                 item.is_active === "Active"
-                                  ? "bg-emerald-500/20 text-emerald-400"
-                                  : "bg-rose-500/20 text-rose-400"
+                                  ? isDark
+                                    ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                                    : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                  : isDark
+                                    ? "bg-rose-500/20 text-rose-400 border-rose-500/30"
+                                    : "bg-rose-50 text-rose-700 border-rose-200"
                               }`}
                             >
                               {item.is_active}
@@ -686,7 +712,7 @@ export default function Home() {
                   <option value="ALL">เลือก Plant (ทั้งหมด)</option>
                   {uniquePlants.map((plant) => (
                     <option key={plant} value={plant}>
-                      Plant: {plant}
+                      Plant: {formatPlant(plant)}
                     </option>
                   ))}
                 </select>
@@ -760,7 +786,13 @@ export default function Home() {
                           <td
                             className={`p-3 font-bold ${isDark ? "text-slate-100" : "text-slate-900"}`}
                           >
-                            {item.Grade}
+                            <button
+                              onClick={() => setSelectedGrade(item)}
+                              className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline font-bold text-left cursor-pointer"
+                              title={`คลิกเพื่อดูฉลาก มอก. ของ ${item.Grade}`}
+                            >
+                              {item.Grade}
+                            </button>
                           </td>
                           <td
                             className={
@@ -774,7 +806,7 @@ export default function Home() {
                               isDark ? "text-slate-300" : "text-slate-700"
                             }
                           >
-                            {item.plant}
+                            {formatPlant(item.plant)}
                           </td>
                           <td
                             className={
@@ -788,10 +820,14 @@ export default function Home() {
                           </td>
                           <td className="p-3">
                             <span
-                              className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                              className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
                                 item.is_active === "Active"
-                                  ? "bg-emerald-500/20 text-emerald-400"
-                                  : "bg-rose-500/20 text-rose-400"
+                                  ? isDark
+                                    ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                                    : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                  : isDark
+                                    ? "bg-rose-500/20 text-rose-400 border-rose-500/30"
+                                    : "bg-rose-50 text-rose-700 border-rose-200"
                               }`}
                             >
                               {item.is_active}
@@ -801,14 +837,22 @@ export default function Home() {
                             <div className="flex items-center justify-center gap-2">
                               <button
                                 onClick={(e) => handleOpenEdit(item, e)}
-                                className="p-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/20"
+                                className={`p-1.5 rounded-lg border ${
+                                  isDark
+                                    ? "bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border-amber-500/20"
+                                    : "bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200"
+                                }`}
                                 title="Edit Grade"
                               >
                                 <Pencil className="w-4 h-4" />
                               </button>
                               <button
                                 onClick={(e) => handleSoftDelete(item, e)}
-                                className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/20"
+                                className={`p-1.5 rounded-lg border ${
+                                  isDark
+                                    ? "bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border-rose-500/20"
+                                    : "bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200"
+                                }`}
                                 title="Set Inactive"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -1010,6 +1054,13 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {/* Modal ฉลาก มอก. (Grade Label) */}
+      <GradeLabelModal
+        item={selectedGrade}
+        isDark={isDark}
+        onClose={() => setSelectedGrade(null)}
+      />
     </div>
   );
 }
