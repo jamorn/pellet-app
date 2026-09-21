@@ -1,51 +1,57 @@
 import { TISItem } from "@/types/tis";
 
-export class TISGradeModel implements TISItem {
-  Grade: string;
-  "Status Approved TIS": string;
+export class TISGradeModel {
+  id?: string;
+  grade: string;
+  gradeType: string;
+  plant: string | number;
   level: string;
-  plant: number;
-  created_at: string;
-  updated_at: string;
-  created_by: string;
-  updated_by: string;
-  is_active: string;
-  Grade_type: string;
+  tisStatus: string;
+  activeStatus: string;
 
-  constructor(item: TISItem) {
-    this.Grade = item.Grade;
-    this["Status Approved TIS"] = item["Status Approved TIS"];
-    this.level = item.level;
-    this.plant = item.plant;
-    this.created_at = item.created_at;
-    this.updated_at = item.updated_at;
-    this.created_by = item.created_by;
-    this.updated_by = item.updated_by;
-    this.is_active = item.is_active;
-    this.Grade_type = item.Grade_type;
+  constructor(data: Partial<TISGradeModel>) {
+    this.id = data.id;
+    this.grade = data.grade || "";
+    this.gradeType = data.gradeType || "N/A";
+    this.plant = data.plant || "";
+    this.level = data.level || "-";
+    this.tisStatus = data.tisStatus || "N/A";
+    this.activeStatus = data.activeStatus || "Inactive";
   }
 
-  // Domain Helper Methods
-  public isApproved(): boolean {
-    return this["Status Approved TIS"] === "OK";
+  /**
+   * Factory Method สำหรับแปลง Raw Data จาก API/JSON เข้าสู่ Domain Model
+   */
+  static fromApiResponse(rawItem: TISItem | Record<string, any>): TISGradeModel {
+    // Cast เป็น any ชั่วคราวเฉพาะตอนดึง Property เพื่อรองรับความหลากหลายของ Key
+    const item = rawItem as any;
+
+    const gradeVal = item.grade || item.Grade || "";
+    const plantVal = item.plant || item.Plant || "";
+
+    return new TISGradeModel({
+      id: item.id || item.ID || (gradeVal ? `${gradeVal}-${plantVal}` : undefined),
+      grade: gradeVal,
+      gradeType: item.gradeType || item.grade_type || item.Grade_type || item.GradeType || "N/A",
+      plant: plantVal,
+      level: item.level || item.Level || "-",
+      tisStatus: item.tisStatus || item.tis_status || item.Tis_status || item.TisStatus || "N/A",
+      activeStatus: item.activeStatus || item.active_status || item.Active_status || item.ActiveStatus || "Active",
+    });
   }
 
-  public isActiveStatus(): boolean {
-    return this.is_active === "Active";
-  }
-
-  public toJSON(): TISItem {
+  /**
+   * แปลง Domain Model กลับเป็น Plain Object สำหรับเก็บลง LocalStorage
+   */
+  toJSON(): Record<string, any> {
     return {
-      Grade: this.Grade,
-      "Status Approved TIS": this["Status Approved TIS"],
-      level: this.level,
+      id: this.id,
+      grade: this.grade,
+      gradeType: this.gradeType,
       plant: this.plant,
-      created_at: this.created_at,
-      updated_at: this.updated_at,
-      created_by: this.created_by,
-      updated_by: this.updated_by,
-      is_active: this.is_active,
-      Grade_type: this.Grade_type,
+      level: this.level,
+      tisStatus: this.tisStatus,
+      activeStatus: this.activeStatus,
     };
   }
 }

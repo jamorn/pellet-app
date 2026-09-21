@@ -1,48 +1,59 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Navbar from "@/components/Navbar";
 import UserTableView from "@/components/UserTableView";
-import AdminCrudView from "@/components/AdminCrudView";
 import { TISApiService } from "@/services/TISApiService";
 import { TISGradeModel } from "@/models/TISGradeModel";
 
-export default function Dashboard() {
-  const [activeTab, setActiveTab] = useState("view");
-  const [items, setItems] = useState<TISGradeModel[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function HomePage() {
+  const [data, setData] = useState<TISGradeModel[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
 
-  const loadData = async () => {
+  // เพิ่ม State สำหรับ activeTab ตามที่ Navbar ต้องการ
+  const [activeTab, setActiveTab] = useState<string>("data-view");
+
+  const fetchFreshData = useCallback(async () => {
     setLoading(true);
     try {
-      const service = TISApiService.getInstance();
-      const { items } = await service.fetchAllData();
-      setItems(items);
-    } catch (err) {
-      console.error(err);
+      const freshData = await TISApiService.fetchFromApi();
+      const updatedTime = TISApiService.setCachedData(freshData);
+      setData(freshData);
+      setLastUpdated(updatedTime);
+    } catch (error) {
+      console.error("Error fetching fresh data from GAS API:", error);
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    loadData();
   }, []);
 
+  useEffect(() => {
+    const { data: cachedData, lastUpdated: cachedTime } =
+      TISApiService.getCachedData();
+
+    if (cachedData && cachedData.length > 0) {
+      setData(cachedData);
+      setLastUpdated(cachedTime);
+      setLoading(false);
+    } else {
+      fetchFreshData();
+    }
+  }, [fetchFreshData]);
+
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 transition-colors">
+    <main className="min-h-screen bg-slate-100 dark:bg-slate-900">
+      {/* ส่ง activeTab และ setActiveTab ให้กับ Navbar */}
       <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {loading ? (
-          <div className="flex justify-center items-center py-20 text-slate-500">
-            Loading data...
-          </div>
-        ) : activeTab === "view" ? (
-          <UserTableView items={items} />
-        ) : (
-          <AdminCrudView items={items} onRefresh={loadData} />
-        )}
-      </main>
-    </div>
+
+      <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-4">
+        <UserTableView
+          data={data}
+          loading={loading}
+          lastUpdated={lastUpdated}
+          onRefresh={fetchFreshData}
+        />
+      </div>
+    </main>
   );
 }
